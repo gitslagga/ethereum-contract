@@ -51,24 +51,17 @@ contract TokenTimelock {
     function releaseTime() public view returns (uint256) {
         return _releaseTime;
     }
-    
-    function tokenSender() public view returns (address) {
-        return msg.sender;
-    }
-    function tokenSenderAmount() public view returns (uint256) {
-        return _token.balanceOf(msg.sender);
-    }
 
     /**
      * @notice Transfers tokens held by timelock to beneficiary.
      */
-    function release(uint256 amount) public {
+    function release() public {
         // solhint-disable-next-line not-rely-on-time
         require(block.timestamp >= _releaseTime, "TokenTimelock: current time is before release time");
 
-        uint256 amount = _token.balanceOf(msg.sender);
+        uint256 amount = _token.balanceOf(address(this));
         require(amount > 0, "TokenTimelock: no tokens to release");
 
-        _token.safeTransferFrom(msg.sender, _beneficiary, amount);
+        _token.safeTransfer(_beneficiary, amount);
     }
 }
