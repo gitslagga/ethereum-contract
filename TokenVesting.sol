@@ -80,11 +80,10 @@ contract TokenVesting is Ownable {
     require(!revoked[address(_token)], "TokenVesting: tokens has been revoked");
 
     uint256 balance = _token.balanceOf(address(this));
-    uint256 unreleased = releasableAmount(_token);
-    uint256 refund = balance.sub(unreleased);
+    require(balance > 0, "TokenVesting: no tokens to revoke");
 
     revoked[address(_token)] = true;
-    _token.safeTransfer(owner(), refund);
+    _token.safeTransfer(owner(), balance);
 
     emit Revoked();
   }
