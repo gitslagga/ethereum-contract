@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "./Ownable.sol";
 import "./SafeMath.sol";
 import "./SafeERC20.sol";
 
@@ -47,14 +48,14 @@ contract TokenVesting is Ownable {
   )
     public
   {
-    require(_beneficiary != address(0));
-    require(_cliff <= _duration);
+    require(_beneficiary != address(0), "TokenVesting: beneficiary can not be first address");
+    require(_cliff <= _duration, "TokenVesting: duration time is before cliff time");
 
     beneficiary = _beneficiary;
-    revocable = _revocable;
-    duration = _duration;
-    cliff = _start.add(_cliff);
     start = _start;
+    cliff = _start.add(_cliff);
+    duration = _duration;
+    revocable = _revocable;
   }
 
   /**
@@ -63,11 +64,9 @@ contract TokenVesting is Ownable {
    */
   function release(IERC20 _token) public {
     uint256 unreleased = releasableAmount(_token);
+    require(unreleased > 0, "TokenVesting: no tokens to release");
 
-    require(unreleased > 0);
-
-    released[_token] = released[_token].add(unreleased);
-
+    released[address(_token)] = released[address(_token)].add(unreleased);
     _token.safeTransfer(beneficiary, unreleased);
 
     emit Released(unreleased);
@@ -79,17 +78,15 @@ contract TokenVesting is Ownable {
    * @param _token ERC20 token which is being vested
    */
   function revoke(IERC20 _token) public onlyOwner {
-    require(revocable);
-    require(!revoked[_token]);
+    require(revocable, "TokenVesting: can not be revocable");
+    require(!revoked[address(_token)], "TokenVesting: tokens has been revoked");
 
     uint256 balance = _token.balanceOf(address(this));
-
     uint256 unreleased = releasableAmount(_token);
     uint256 refund = balance.sub(unreleased);
 
-    revoked[_token] = true;
-
-    _token.safeTransfer(owner, refund);
+    revoked[address(_token)] = true;
+    _token.safeTransfer(owner(), refund);
 
     emit Revoked();
   }
@@ -99,7 +96,7 @@ contract TokenVesting is Ownable {
    * @param _token IERC20 token which is being vested
    */
   function releasableAmount(IERC20 _token) public view returns (uint256) {
-    return vestedAmount(_token).sub(released[_token]);
+    return vestedAmount(_token).sub(released[address(_token)]);
   }
 
   /**
@@ -107,12 +104,12 @@ contract TokenVesting is Ownable {
    * @param _token ERC20 token which is being vested
    */
   function vestedAmount(IERC20 _token) public view returns (uint256) {
-    uint256 currentBalance = _token.balanceOf(this);
-    uint256 totalBalance = currentBalance.add(released[_token]);
-    
+    uint256 currentBalance = _token.balanceOf(address(this));
+    uint256 totalBalance = currentBalance.add(released[address(_token)]);
+
     if (block.timestamp < cliff) {
       return 0;
-    } else if (block.timestamp >= start.add(duration) || revoked[_token]) {
+    } else if (block.timestamp >= start.add(duration) || revoked[address(_token)]) {
       return totalBalance;
     } else {
       return totalBalance.mul(block.timestamp.sub(start)).div(duration);
