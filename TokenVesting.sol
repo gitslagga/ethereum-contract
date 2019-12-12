@@ -19,15 +19,13 @@ contract TokenVesting is Ownable {
 
   // beneficiary of tokens after they are released
   address public beneficiary;
-
   uint256 public cliff;
   uint256 public start;
   uint256 public duration;
-
   bool public revocable;
 
-  mapping (address => uint256) public released;
-  mapping (address => bool) public revoked;
+  mapping (address => uint256) private released;
+  mapping (address => bool) private revoked;
 
   /**
    * @dev Creates a vesting contract that vests its balance of any ERC20 token to the
@@ -46,7 +44,7 @@ contract TokenVesting is Ownable {
     uint256 _duration,
     bool _revocable
   )
-    public
+    internal
   {
     require(_beneficiary != address(0), "TokenVesting: beneficiary can not be first address");
     require(_cliff <= _duration, "TokenVesting: duration time is before cliff time");
@@ -95,7 +93,7 @@ contract TokenVesting is Ownable {
    * @dev Calculates the amount that has already vested but hasn't been released yet.
    * @param _token IERC20 token which is being vested
    */
-  function releasableAmount(IERC20 _token) public view returns (uint256) {
+  function releasableAmount(IERC20 _token) private view returns (uint256) {
     return vestedAmount(_token).sub(released[address(_token)]);
   }
 
@@ -103,7 +101,7 @@ contract TokenVesting is Ownable {
    * @dev Calculates the amount that has already vested.
    * @param _token ERC20 token which is being vested
    */
-  function vestedAmount(IERC20 _token) public view returns (uint256) {
+  function vestedAmount(IERC20 _token) private view returns (uint256) {
     uint256 currentBalance = _token.balanceOf(address(this));
     uint256 totalBalance = currentBalance.add(released[address(_token)]);
 
