@@ -44,7 +44,7 @@ contract TokenVesting is Ownable {
     uint256 _duration,
     bool _revocable
   )
-    internal
+    public
   {
     require(_beneficiary != address(0), "TokenVesting: beneficiary can not be first address");
     require(_cliff <= _duration, "TokenVesting: duration time is before cliff time");
