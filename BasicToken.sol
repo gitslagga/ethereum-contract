@@ -7,23 +7,23 @@ pragma solidity >=0.5.3;
 
 library SafeMath {
 
-    function add(uint a, uint b) internal view returns (uint c) {
+    function add(uint a, uint b) internal pure returns (uint c) {
         c = a + b;
-        require(c >= a);
+        require(c >= a, "Addition calculation error");
     }
 
-    function sub(uint a, uint b) internal view returns (uint c) {
-        require(b <= a);
+    function sub(uint a, uint b) internal pure returns (uint c) {
+        require(b <= a, "Subtraction calculation error");
         c = a - b;
     }
 
-    function mul(uint a, uint b) internal view returns (uint c) {
+    function mul(uint a, uint b) internal pure returns (uint c) {
         c = a * b;
-        require(a == 0 || c / a == b);
+        require(a == 0 || c / a == b, "Multiplication calculation error");
     }
 
-    function div(uint a, uint b) internal view returns (uint c) {
-        require(b > 0);
+    function div(uint a, uint b) internal pure returns (uint c) {
+        require(b > 0, "Division calculation error");
         c = a / b;
     }
 }
@@ -53,7 +53,7 @@ contract Owned {
     }
 
     modifier onlyOwner {
-        require(msg.sender == owner);
+        require(msg.sender == owner, "Msg sender is not owner");
         _;
     }
 
@@ -62,7 +62,7 @@ contract Owned {
     }
 
     function acceptOwnership() public {
-        require(msg.sender == newOwner);
+        require(msg.sender == newOwner, "Msg sender is not newOwner");
         emit OwnershipTransferred(owner, newOwner);
         owner = newOwner;
         newOwner = address(0);
@@ -123,7 +123,7 @@ contract BasicToken is TRC20Interface, Owned {
     }
 
     function () external payable {
-        revert();
+        revert("payable revert");
     }
 
 }
